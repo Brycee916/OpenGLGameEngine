@@ -44,7 +44,7 @@ public class Main {
         }
     } // void render()
     private void initGLFWindow() {
-        int sampleValue = 8;
+        final int SAMPLE_VALUE = 8;
         glfwSetErrorCallback(errorCallback =
                 GLFWErrorCallback.createPrint(System.err));
         if (!glfwInit())
@@ -52,7 +52,7 @@ public class Main {
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-        glfwWindowHint(GLFW_SAMPLES, sampleValue);   //enables multisazmpling 8xMSAA
+        glfwWindowHint(GLFW_SAMPLES, SAMPLE_VALUE);   //enables multisazmpling 8xMSAA
         window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "CSC 133", NULL, NULL);
         if (window == NULL)
             throw new RuntimeException("Failed to create the GLFW window");
@@ -91,26 +91,30 @@ public class Main {
         }
     } // void renderLoop()
     void initOpenGL() {
+        final float RED_BACKGROUND_VALUE = 0.1f,
+                    GREEN_BACKGROUND_VALUE = 0.3f,
+                    BLUE_BACKGROUND_VALUE = 0.7f,
+                    ALPHA_BACKGROUND_VALUE = 1.0f;//0.0 is transparent & 1.0 is opaque
+        String shaderSrcStr1 = "uniform mat4 viewProjMatrix;" +
+                                "void main(void) {" +
+                                " gl_Position = viewProjMatrix * gl_Vertex;" +
+                                "}";
+        String shaderSrcStr2 = "uniform vec3 color;" +
+                                "void main(void) {" +
+                                " gl_FragColor = vec4(1.0f, 0.2f, 0.3f, 1.0f);" +
+                                "}";//color of the box
         GL.createCapabilities();
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
         glViewport(0, 0, WIN_WIDTH, WIN_HEIGHT);
-        glClearColor(0.0f, 0.0f, 1.0f, 1.0f);//set initial color of window
+        glClearColor(RED_BACKGROUND_VALUE, GREEN_BACKGROUND_VALUE, BLUE_BACKGROUND_VALUE, ALPHA_BACKGROUND_VALUE);//set initial color of window
         this.shader_program = glCreateProgram();
         int vs = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vs,
-                "uniform mat4 viewProjMatrix;" +
-                        "void main(void) {" +
-                        " gl_Position = viewProjMatrix * gl_Vertex;" +
-                        "}");
+        glShaderSource(vs, shaderSrcStr1);
         glCompileShader(vs);
         glAttachShader(shader_program, vs);
         int fs = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fs,
-                "uniform vec3 color;" +
-                        "void main(void) {" +
-                        " gl_FragColor = vec4(1.0f, 0.2f, 0.3f, 1.0f);" +
-                        "}");
+        glShaderSource(fs, shaderSrcStr2);
         glCompileShader(fs);
         glAttachShader(shader_program, fs);
         glLinkProgram(shader_program);
@@ -119,7 +123,17 @@ public class Main {
         return;
     } // void initOpenGL()
     void renderObjects() {
-        while (!glfwWindowShouldClose(window)) {
+        final int VERTEX_DIMENSIONS = 2;   //number of dimensions
+        final int X_MIN = -100, //view projection matrix ortho
+                  X_MAX = 100,
+                  Y_MIN = -100,
+                  Y_MAX = 100,
+                  Z_MIN = 0,
+                  Z_MAX = 10;
+        final float VECTOR_ZERO = 1.0f,
+                    VECTOR_ONE = 0.498f,
+                    VECTOR_TWO = 0.153f;
+        while (!glfwWindowShouldClose(window)) {//while window should remain open
             glfwPollEvents();   //render objects placed in queue
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             int vbo = glGenBuffers();
@@ -135,14 +149,14 @@ public class Main {
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, (IntBuffer) BufferUtils.
                     createIntBuffer(indices.length).
                     put(indices).flip(), GL_STATIC_DRAW);
-            glVertexPointer(2, GL_FLOAT, 0, 0L);
-            viewProjMatrix.setOrtho(-100, 100, -100, 100, 0, 10);
+            glVertexPointer(VERTEX_DIMENSIONS, GL_FLOAT, 0, 0L);
+            viewProjMatrix.setOrtho(X_MIN, X_MAX, Y_MIN, Y_MAX, Z_MIN, Z_MAX);
             glUniformMatrix4fv(vpMatLocation, false,
                     viewProjMatrix.get(myFloatBuffer));
-            glUniform3f(renderColorLocation, 1.0f, 0.498f, 0.153f);
+            glUniform3f(renderColorLocation, VECTOR_ZERO, VECTOR_ONE, VECTOR_TWO);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             int VTD = 6; // need to process 6 Vertices To Draw 2 triangles
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0L);
+            glDrawElements(GL_TRIANGLES, VTD, GL_UNSIGNED_INT, 0L);
             glfwSwapBuffers(window);
         }
     } // renderObjects
