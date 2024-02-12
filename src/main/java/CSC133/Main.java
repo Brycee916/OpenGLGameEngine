@@ -29,7 +29,8 @@ public class Main {
     int vpMatLocation = 0, renderColorLocation = 0;
     public static void main(String[] args) {
         //new csc133.slWindow().slWindow(WIN_WIDTH, WIN_HEIGHT);
+        //new Main.render();
         long myWindow = new slWindow().get(WIN_WIDTH, WIN_HEIGHT);
-        new slWindow().render();
+
     } // public static void main(String[] args)
 }

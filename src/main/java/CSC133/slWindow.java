@@ -28,13 +28,12 @@ import static org.lwjgl.system.MemoryUtil.*;
 public class slWindow {
     private static int winWidth = 1800,
                       winHeight = 1200;
-    private static long myWindow = 0;
+    static long myWindow = 0;
 
     static GLFWErrorCallback errorCallback;
     static GLFWKeyCallback keyCallback;
     static GLFWFramebufferSizeCallback fbCallback;
-    static long window;
-    static int WIN_WIDTH = 1800, WIN_HEIGHT = 1200;
+
     static int WIN_POS_X = 30;
     static int WIN_POX_Y = 90;
     private static final int OGL_MATRIX_SIZE = 16;
@@ -70,7 +69,7 @@ public class slWindow {
         try {
             initGLFWindow();
             renderLoop();
-            glfwDestroyWindow(window);
+            glfwDestroyWindow(myWindow);
             keyCallback.free();
             fbCallback.free();
         } finally {
@@ -88,10 +87,10 @@ public class slWindow {
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         glfwWindowHint(GLFW_SAMPLES, SAMPLE_VALUE);   //enables multisazmpling 8xMSAA
-        window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "CSC 133", NULL, NULL);
-        if (window == NULL)
+        myWindow = glfwCreateWindow(winWidth, winHeight, "CSC 133", NULL, NULL);
+        if (myWindow == NULL)
             throw new RuntimeException("Failed to create the GLFW window");
-        glfwSetKeyCallback(window, keyCallback = new GLFWKeyCallback() {
+        glfwSetKeyCallback(myWindow, keyCallback = new GLFWKeyCallback() {
             @Override
             public void invoke(long window, int key, int scancode, int action, int
                     mods) {
@@ -99,29 +98,29 @@ public class slWindow {
                     glfwSetWindowShouldClose(window, true);
             }
         });
-        glfwSetFramebufferSizeCallback(window, fbCallback = new
+        glfwSetFramebufferSizeCallback(myWindow, fbCallback = new
                 GLFWFramebufferSizeCallback() {
                     @Override
                     public void invoke(long window, int w, int h) {
                         if (w > 0 && h > 0) {
-                            WIN_WIDTH = w;
-                            WIN_HEIGHT = h;
+                            winWidth = w;
+                            winHeight = h;
                         }
                     }
                 });
         GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-        glfwSetWindowPos(window, WIN_POS_X, WIN_POX_Y);
-        glfwMakeContextCurrent(window);
+        glfwSetWindowPos(myWindow, WIN_POS_X, WIN_POX_Y);
+        glfwMakeContextCurrent(myWindow);
         int VSYNC_INTERVAL = 1;
         glfwSwapInterval(VSYNC_INTERVAL);
-        glfwShowWindow(window);
+        glfwShowWindow(myWindow);
     } // private void initGLFWindow()
     static void renderLoop() {
         glfwPollEvents();   //render objects placed in queue
         initOpenGL();
         renderObjects();
         /* Process window messages in the main thread */
-        while (!glfwWindowShouldClose(window)) {
+        while (!glfwWindowShouldClose(myWindow)) {
             glfwWaitEvents();
         }
     } // void renderLoop()
@@ -141,7 +140,7 @@ public class slWindow {
         GL.createCapabilities();
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
-        glViewport(0, 0, WIN_WIDTH, WIN_HEIGHT);
+        glViewport(0, 0, winWidth, winHeight);
         glClearColor(RED_BACKGROUND_VALUE, GREEN_BACKGROUND_VALUE, BLUE_BACKGROUND_VALUE, ALPHA_BACKGROUND_VALUE);//set initial color of window
         shader_program = glCreateProgram();
         int vs = glCreateShader(GL_VERTEX_SHADER);
@@ -159,16 +158,16 @@ public class slWindow {
     } // void initOpenGL()
     static void renderObjects() {
         final int VERTEX_DIMENSIONS = 2;   //number of dimensions
-        final int X_MIN = -100, //view projection matrix ortho
-                X_MAX = 100,
-                Y_MIN = -100,
-                Y_MAX = 100,
-                Z_MIN = 0,
-                Z_MAX = 10;
+        int X_MIN = -100, //view projection matrix ortho
+            X_MAX = 100,
+            Y_MIN = -100,
+            Y_MAX = 100,
+            Z_MIN = 0,
+            Z_MAX = 10;
         final float VECTOR_ZERO = 1.0f,
                 VECTOR_ONE = 0.498f,
                 VECTOR_TWO = 0.153f;
-        while (!glfwWindowShouldClose(window)) {//while window should remain open
+        while (!glfwWindowShouldClose(myWindow)) {//while window should remain open
             glfwPollEvents();   //render objects placed in queue
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             int vbo = glGenBuffers();
@@ -192,7 +191,7 @@ public class slWindow {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             int VTD = 6; // need to process 6 Vertices To Draw 2 triangles
             glDrawElements(GL_TRIANGLES, VTD, GL_UNSIGNED_INT, 0L);
-            glfwSwapBuffers(window);
+            glfwSwapBuffers(myWindow);
         }
     } // renderObjects
 }
