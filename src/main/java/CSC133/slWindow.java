@@ -26,8 +26,8 @@ import static org.lwjgl.opengl.GL20.glUniform3f;
 import static org.lwjgl.system.MemoryUtil.*;
 
 public class slWindow {
-    private static int winWidth = 1800,
-                      winHeight = 1200;
+    private static int winWidth,
+                      winHeight;
     static long myWindow = 0;
 
     static GLFWErrorCallback errorCallback;
@@ -158,22 +158,67 @@ public class slWindow {
     } // void initOpenGL()
     static void renderObjects() {
         final int VERTEX_DIMENSIONS = 2;   //number of dimensions
-        int X_MIN = -100, //view projection matrix ortho
-            X_MAX = 100,
-            Y_MIN = -100,
-            Y_MAX = 100,
-            Z_MIN = 0,
-            Z_MAX = 10;
+        float X_MAX_VIEW = 200,
+            Y_MAX_VIEW = 200,
+            Z_MAX_VIEW = 10;
         final float VECTOR_ZERO = 1.0f,
                 VECTOR_ONE = 0.498f,
                 VECTOR_TWO = 0.153f;
+        final int MAX_ROWS = 7;
+        final int MAX_COLS = 5;
+
         while (!glfwWindowShouldClose(myWindow)) {//while window should remain open
             glfwPollEvents();   //render objects placed in queue
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             int vbo = glGenBuffers();
             int ibo = glGenBuffers();
-            float[] vertices = {-20f, -20f, 20f, -20f, 20f, 20f, -20f, 20f};
-            int[] indices = {0, 1, 2, 0, 2, 3};
+            //float[] vertices = {-20f, -20f, 20f, -20f, 20f, 20f, -20f, 20f};
+            //int[] indices = {0, 1, 2, 0, 2, 3};
+
+            float scaleFactor = 9f;
+            float length = 10f * scaleFactor;
+            float offset = 10f * scaleFactor;
+            float padding = 5f * scaleFactor;
+            float xmin = offset;
+            float xmax = xmin + length;
+            float ymax = winHeight - offset;
+            float ymin = ymax - length;
+            int vps = 4; //vertices per square
+            int fpv = 2; //floats per vertices
+            int indx = 0;
+            float[] vertices = new float[MAX_ROWS * MAX_COLS * vps * fpv]; //7*5*4*2
+            for(int row = 0; row < MAX_ROWS; row++){
+                for(int col = 0; col < MAX_COLS; col++){
+                    vertices[indx++] = xmin;
+                    vertices[indx++] = ymin;
+                    vertices[indx++] = xmax;
+                    vertices[indx++] = ymin;
+                    vertices[indx++] = xmax;
+                    vertices[indx++] = ymax;
+                    vertices[indx++] = xmin;
+                    vertices[indx++] = ymax;
+                    xmin = xmax + padding;
+                    xmax = xmin + length;
+                }
+                xmin = offset;
+                xmax = xmin + length;
+                ymax = ymin - padding;
+                ymin = ymax - length;
+            }
+            int ids = 6; //indices per square
+            int[] indices = new int[MAX_ROWS * MAX_COLS * ids];
+            int v_index = 0;
+            int my_i = 0;
+            while(my_i < indices.length){
+                indices[my_i++] = v_index;
+                indices[my_i++] = v_index + 1;
+                indices[my_i++] = v_index + 2;
+                indices[my_i++] = v_index;
+                indices[my_i++] = v_index + 2;
+                indices[my_i++] = v_index + 3;
+                v_index += vps;
+            }
+
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
             glBufferData(GL_ARRAY_BUFFER, (FloatBuffer) BufferUtils.
                     createFloatBuffer(vertices.length).
@@ -184,13 +229,14 @@ public class slWindow {
                     createIntBuffer(indices.length).
                     put(indices).flip(), GL_STATIC_DRAW);
             glVertexPointer(VERTEX_DIMENSIONS, GL_FLOAT, 0, 0L);
-            viewProjMatrix.setOrtho(X_MIN, X_MAX, Y_MIN, Y_MAX, Z_MIN, Z_MAX);
+            viewProjMatrix.setOrtho(0.0f, (float)winWidth, 0.0f, (float)winHeight, 0.0f, Z_MAX_VIEW);
+            //viewProjMatrix.setOrtho(0, 200, 0, 200, 0, Z_MAX_VIEW);
             glUniformMatrix4fv(vpMatLocation, false,
                     viewProjMatrix.get(myFloatBuffer));
             glUniform3f(renderColorLocation, VECTOR_ZERO, VECTOR_ONE, VECTOR_TWO);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             int VTD = 6; // need to process 6 Vertices To Draw 2 triangles
-            glDrawElements(GL_TRIANGLES, VTD, GL_UNSIGNED_INT, 0L);
+            glDrawElements(GL_TRIANGLES, VTD * MAX_ROWS * MAX_COLS, GL_UNSIGNED_INT, 0L);
             glfwSwapBuffers(myWindow);
         }
     } // renderObjects

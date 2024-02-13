@@ -19,13 +19,12 @@ public class Main {
     GLFWKeyCallback keyCallback;
     GLFWFramebufferSizeCallback fbCallback;
     static long window;
-    static int WIN_WIDTH = 1800, WIN_HEIGHT = 1200;
-    int WIN_POS_X = 30, WIN_POX_Y = 90;
-    private static final int OGL_MATRIX_SIZE = 16;
+    //static int WIN_WIDTH = 1800, WIN_HEIGHT = 1200;
+    static int WIN_WIDTH = 900, WIN_HEIGHT = 900;
+
     // call glCreateProgram() here - we have no gl-context here
     int shader_program;
     Matrix4f viewProjMatrix = new Matrix4f();
-    FloatBuffer myFloatBuffer = BufferUtils.createFloatBuffer(OGL_MATRIX_SIZE);
     int vpMatLocation = 0, renderColorLocation = 0;
     public static void main(String[] args) {
         //new csc133.slWindow().slWindow(WIN_WIDTH, WIN_HEIGHT);
